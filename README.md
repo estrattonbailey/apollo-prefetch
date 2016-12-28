@@ -76,4 +76,17 @@ export default graphql(PageQuery, {
 ```
 
 ## Prefetching Route Data Manually
-Todo
+```javascript
+import React from 'react'
+import { Link } from 'react-router'
+import { prefetch } from './AsyncProps'
+import routes from 'path/to/routes'
+
+export default props => (
+  <header>
+    <Link 
+      to="/about"
+      onMouseOver={e => prefetch('/about', routes, res => console.log('Loaded'))}
+      >About Page</Link>
+  </header>
+)

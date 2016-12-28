@@ -1,5 +1,5 @@
 import React from 'react'
-import { RouterContext } from 'react-router'
+import { RouterContext, match } from 'react-router'
 
 /**
  * @param {array} components Component tree for given route
@@ -16,14 +16,40 @@ const flattenChildren = components => components.reduce((flattened, next, i) => 
  * @param {object} props renderProps react-router and any relevant data
  * @return {promise} Resolves when all queries have been made
  */
-export const prefetch = props => {
+const load = props => {
   return Promise.all(
-    flattenChildren(props.components).map((comp, i) => {
+    flattenChildren(props.components).forEach((comp, i) => {
       return comp.loadProps(props)
     })
   )
 }
 
+/**
+ * Util cache to avoid cache hit
+ */
+let routeCache = []
+
+/**
+ * Fetch data for a given route
+ * @param {string} location Route to fetch
+ * @param {ReactComponent} routes Your react-router tree
+ * @param {function} cb Optional callback
+ */
+export const prefetch = (location, routes, cb = () => {}) => {
+  if (routeCache.filter(route => location === route).length > 0) { return }
+
+  routeCache.push(location)
+
+  match({ routes, location }, (error, redirectLocation, renderProps) => {
+    if (error) { console.warn(error) }
+    return load(renderProps).then(cb)
+  })
+}
+
+/**
+ * @param {object} props RenderProps returned from match()
+ * @param {object} options passed directly or via asyncMiddleware()
+ */
 export class AsyncProps extends React.Component {
   constructor(props) {
     super(props)
@@ -43,7 +69,7 @@ export class AsyncProps extends React.Component {
       this.props.onLoad()
     }
 
-    prefetch(newProps).then(res => {
+    load(newProps).then(res => {
       this.setState({
         loaded: true,
         location: newProps.location.pathname,
@@ -71,4 +97,8 @@ export class AsyncProps extends React.Component {
   }
 }
 
+/**
+ * @param {object} options onLoad() and onLoadEnd()
+ * @param {object} props RenderProps returned from match()
+ */
 export const asyncMiddleware = (options = {}) => props => <AsyncProps {...props} {...options}/>
