@@ -1,9 +1,11 @@
-# apollo-asyncprops
-Middleware, HOC, and utilities for prefetching data in React + React-Router + Apollo projects. Inspired by [AsyncProps](https://github.com/ryanflorence/async-props).
+# apollo-prefetch
+Middleware, HOC, and utilities for prefetching data in React + React-Router + Apollo projects. 
+
+Inspired by [AsyncProps](https://github.com/ryanflorence/async-props) and [next.js](https://github.com/zeit/next.js).
 
 ### Goals
-1. When navigating to a new view, prefetch data for next view, then render view.
-2. Prefetch data for a given component tree, returned from react-router.
+1. When navigating to a new view, prefetch data for next view, *then* render view.
+2. Prefetch data for a given route so Apollo can cache it for faster rendering.
 
 ## Usage
 Add `asyncMiddleware` to your router instance:
@@ -32,7 +34,7 @@ match({ browserHistory, routes }, (error, redirectLocation, renderProps) => {
   render(<Root renderProps={renderProps}/>, document.getElementById('root'))
 })
 ```
-Add static `loadProps` method to each of your Apollo wrapped components:
+Add static `getInitialProps` method to each of your Apollo wrapped components:
 ```javascript
 import React from 'react'
 import { graphql } from 'react-apollo'
@@ -50,7 +52,7 @@ const PageQuery = gql`
 `
 
 class Page extends React.Component {
-  static loadProps(props) {
+  static getInitialProps(props) {
     return client.query({
       query: PageQuery,
       variables: {
