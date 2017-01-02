@@ -88,7 +88,7 @@ export default props => (
   <header>
     <Link 
       to="/about"
-      onMouseOver={e => prefetch('/about', routes, res => console.log('Loaded'))}
+      onMouseOver={e => prefetch('/about', routes).then(data => console.log('Loaded'))}
       >About Page</Link>
   </header>
 )

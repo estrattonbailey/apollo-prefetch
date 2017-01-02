@@ -35,16 +35,15 @@ let routeCache = []
  * Fetch data for a given route
  * @param {string} location Route to fetch
  * @param {ReactComponent} routes Your react-router tree
- * @param {function} cb Optional callback
  */
-export const prefetch = (location, routes, cb = () => {}) => {
+export const prefetch = (location, routes) => {
   if (routeCache.filter(route => location === route).length > 0) { return }
 
   routeCache.push(location)
 
   match({ routes, location }, (error, redirectLocation, renderProps) => {
     if (error) { console.warn(error) }
-    return load(renderProps).then(cb)
+    return load(renderProps)
   })
 }
 
