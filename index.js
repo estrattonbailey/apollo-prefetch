@@ -2,11 +2,13 @@ import React from 'react'
 import { RouterContext, match } from 'react-router'
 
 /**
+ * TODO
+ *  - what if component has child component?
  * @param {array} components Component tree for given route
- * @return {array} Array of components that contain a loadProps method
+ * @return {array} Array of components that contain a getInitialProps method
  */
-const flattenChildren = components => components.reduce((flattened, next, i) => {
-  if (next.WrappedComponent && next.WrappedComponent.loadProps) {
+export const flattenChildren = components => components.reduce((flattened, next, i) => {
+  if (next.WrappedComponent && next.WrappedComponent.getInitialProps) {
     flattened.push(next.WrappedComponent)
   }
   return flattened
@@ -18,8 +20,8 @@ const flattenChildren = components => components.reduce((flattened, next, i) => 
  */
 const load = props => {
   return Promise.all(
-    flattenChildren(props.components).forEach((comp, i) => {
-      return comp.loadProps(props)
+    flattenChildren(props.components).map(comp => {
+      return comp.getInitialProps(props)
     })
   )
 }
@@ -51,7 +53,7 @@ export const prefetch = (location, routes, cb = () => {}) => {
  * @param {object} options passed directly or via asyncMiddleware()
  */
 export class AsyncProps extends React.Component {
-  constructor(props) {
+  constructor (props) {
     super(props)
 
     this.state = {
@@ -60,7 +62,7 @@ export class AsyncProps extends React.Component {
     }
   }
 
-  componentWillReceiveProps(newProps) {
+  componentWillReceiveProps (newProps) {
     if (newProps.location.pathname === this.state.location) {
       return
     }
@@ -84,7 +86,7 @@ export class AsyncProps extends React.Component {
     })
   }
 
-  shouldComponentUpdate(newProps, newState) {
+  shouldComponentUpdate (newProps, newState) {
     this.setState({
       loaded: false,
     })
@@ -92,7 +94,7 @@ export class AsyncProps extends React.Component {
     return newState.loaded
   }
 
-  render() {
+  render () {
     return <RouterContext {...this.props}/>
   }
 }
