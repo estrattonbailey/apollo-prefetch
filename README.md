@@ -1,11 +1,16 @@
 # apollo-prefetch
-Middleware, HOC, and utilities for prefetching data in React + React-Router + Apollo projects. 
+Async middleware and utilities for prefetching data in React + React-Router + Apollo projects. 
 
 Inspired by [AsyncProps](https://github.com/ryanflorence/async-props) and [next.js](https://github.com/zeit/next.js).
 
 ### Goals
 1. When navigating to a new view, prefetch data for next view, *then* render view.
 2. Prefetch data for a given route so Apollo can cache it for faster rendering.
+
+## Install
+```bash
+npm i apollo-prefetch --save
+```
 
 ## Usage
 Add `asyncMiddleware` to your router instance:
@@ -22,8 +27,9 @@ const Root = props => (
       history={browserHistory}
       routes={routes}
       render={asyncMiddleware({
+        routes,
         onLoad: () => console.log('Loading...'),
-        onLoadEnd: () => console.log('Load Complete'),
+        onComplete: () => console.log('Load Complete'),
       })}
       {...props.renderProps}/>
   </ApolloProvider>
@@ -34,12 +40,13 @@ match({ browserHistory, routes }, (error, redirectLocation, renderProps) => {
   render(<Root renderProps={renderProps}/>, document.getElementById('root'))
 })
 ```
-Add static `getInitialProps` method to each of your Apollo wrapped components:
+
+Add static `getInitialProps` method to each of your top-level Apollo wrapped components. These components should be direct children of the root component, i.e. when specifying a route, the component to render `<Route path="posts/:slug" component={Post}/>`.
 ```javascript
 import React from 'react'
 import { graphql } from 'react-apollo'
 import gql from 'graphql-tag'
-import { client } from '../store'
+import { client } from 'path/to/apollo/client-instance'
 
 const PageQuery = gql`
   query getPage($slug: String) {
@@ -77,18 +84,33 @@ export default graphql(PageQuery, {
 })(Page)
 ```
 
-## Prefetching Route Data Manually
+## Prefetching Route Data
+In addition to the middleware, this library provides an interface to fetch data for a given route ahead of time.
 ```javascript
 import React from 'react'
 import { Link } from 'react-router'
-import { prefetch } from './AsyncProps'
-import routes from 'path/to/routes'
+import { prefetch } from 'apollo-prefetch'
+
+const callback = (err, res) => {
+  if (err) return console.warn(err)
+  console.log(res)
+}
 
 export default props => (
   <header>
     <Link 
       to="/about"
-      onMouseOver={e => prefetch('/about', routes).then(data => console.log('Loaded'))}
-      >About Page</Link>
+      onMouseOver={e => prefetch('/about', callback)}>
+      About Page</Link>
   </header>
 )
+```
+Apollo-prefetch needs to have react-router route structure accessible, so you should probably supply it as an `asyncMiddleware` option, as shown above. Alternatively, you can pass an object as the first param to `prefetch()`.
+```
+import routes from 'path/to/routes'
+
+prefetch({
+  location: '/about',
+  routes,
+}, (err, res) => {})
+```

@@ -2,12 +2,26 @@ import React from 'react'
 import { RouterContext, match } from 'react-router'
 
 /**
- * TODO
- *  - what if component has child component?
+ * Cache react-router routes config,
+ * as well as routes fetched with prefetch()
+ * which are stored as strings
+ */
+const cache = {
+  routes: null,
+  store: [],
+  add(loc) {
+    this.store.push(loc)
+  },
+  exists(loc) {
+    return this.store.filter(route => loc === route).length > 0
+  }
+}
+
+/**
  * @param {array} components Component tree for given route
  * @return {array} Array of components that contain a getInitialProps method
  */
-export const flattenChildren = components => components.reduce((flattened, next, i) => {
+const flattenChildren = components => components.reduce((flattened, next, i) => {
   if (next.WrappedComponent && next.WrappedComponent.getInitialProps) {
     flattened.push(next.WrappedComponent)
   }
@@ -27,23 +41,28 @@ const load = props => {
 }
 
 /**
- * Util cache to avoid cache hit
- */
-let routeCache = []
-
-/**
  * Fetch data for a given route
- * @param {string} location Route to fetch
- * @param {ReactComponent} routes Your react-router tree
+ * @param {string|object} location Route to fetch
+ * @param {function} cb Async callback, params: error, response
  */
-export const prefetch = (location, routes) => {
-  if (routeCache.filter(route => location === route).length > 0) { return }
+export const prefetch = (options, cb = () => {}) => {
+  let { location, routes } = 'object' === typeof options ? options : { location: options }
 
-  routeCache.push(location)
+  if (cache.exists(location)) { 
+    return
+  } else {
+    cache.add(location)
+  }
+
+  console.log(routes)
+
+  routes = routes ? routes : cache.routes
+
+  if (!routes) { return console.warn(`No routes were provided to prefetch(${location})`) }
 
   match({ routes, location }, (error, redirectLocation, renderProps) => {
     if (error) { console.warn(error) }
-    return load(renderProps)
+    return load(renderProps).then(res => cb(null, res)).catch(e => cb(e))
   })
 }
 
@@ -75,12 +94,12 @@ export class AsyncProps extends React.Component {
         loaded: true,
         location: newProps.location.pathname,
       }, () => {
-        if (this.props.onLoadEnd) {
-          this.props.onLoadEnd()
+        if (this.props.onComplete) {
+          this.props.onComplete()
         }
       })
     }).catch(err => {
-      if (err) console.warn(err)
+      if (err) { console.warn(err) }
       this.props.router.goBack()
     })
   }
@@ -99,7 +118,19 @@ export class AsyncProps extends React.Component {
 }
 
 /**
- * @param {object} options onLoad() and onLoadEnd()
+ * @param {object} options Config object
  * @param {object} props RenderProps returned from match()
  */
-export const asyncMiddleware = (options = {}) => props => <AsyncProps {...props} {...options}/>
+export const asyncMiddleware = options => props => {
+  const opts = Object.assign({
+    routes: null,
+    onLoad: () => {},
+    onComplete: () => {},
+  }, options)
+
+  cache.routes = opts.routes ? opts.routes : null
+
+  delete opts.routes
+
+  return <AsyncProps {...props} {...opts}/>
+}
