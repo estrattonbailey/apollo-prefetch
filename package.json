@@ -60,5 +60,8 @@
   "ava": {
     "require": "babel-register",
     "babel": "inherit"
+  },
+  "dependencies": {
+    "react-apollo": "^0.7.3"
   }
 }

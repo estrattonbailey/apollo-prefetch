@@ -1,5 +1,6 @@
 import React from 'react'
 import { RouterContext, match } from 'react-router'
+import { getDataFromTree } from 'react-apollo/lib/index'
 
 /**
  * Cache react-router routes config,
@@ -7,37 +8,31 @@ import { RouterContext, match } from 'react-router'
  * which are stored as strings
  */
 const cache = {
-  routes: null,
-  store: [],
+  cached: [],
   add(loc) {
-    this.store.push(loc)
+    this.cached.push(loc)
   },
   exists(loc) {
-    return this.store.filter(route => loc === route).length > 0
+    return this.cached.filter(route => loc === route).length > 0
   }
 }
 
 /**
- * @param {array} components Component tree for given route
- * @return {array} Array of components that contain a getInitialProps method
+ * Required objects for 
+ * react-apollo
  */
-const flattenChildren = components => components.reduce((flattened, next, i) => {
-  if (next.WrappedComponent && next.WrappedComponent.getInitialProps) {
-    flattened.push(next.WrappedComponent)
-  }
-  return flattened
-}, [])
+const context = {
+  routes: null,
+  client: null,
+  store: null,
+}
 
 /**
- * @param {object} props renderProps react-router and any relevant data
+ * @param {object} renderProps renderProps react-router and any relevant data
  * @return {promise} Resolves when all queries have been made
  */
-const load = props => {
-  return Promise.all(
-    flattenChildren(props.components).map(comp => {
-      return comp.getInitialProps(props)
-    })
-  )
+const load = renderProps => {
+  return getDataFromTree(<RouterContext {...renderProps}/>, context)
 }
 
 /**
@@ -54,15 +49,13 @@ export const prefetch = (options, cb = () => {}) => {
     cache.add(location)
   }
 
-  console.log(routes)
-
-  routes = routes ? routes : cache.routes
+  routes = routes ? routes : context.routes
 
   if (!routes) { return console.warn(`No routes were provided to prefetch(${location})`) }
 
-  match({ routes, location }, (error, redirectLocation, renderProps) => {
-    if (error) { console.warn(error) }
-    return load(renderProps).then(res => cb(null, res)).catch(e => cb(e))
+  match({ routes, location }, (err, redirectLocation, renderProps) => {
+    if (err) { console.warn(err) }
+    return load(renderProps).then(res => cb(null, res)).catch(err => cb(err))
   })
 }
 
@@ -70,7 +63,7 @@ export const prefetch = (options, cb = () => {}) => {
  * @param {object} props RenderProps returned from match()
  * @param {object} options passed directly or via asyncMiddleware()
  */
-export class AsyncProps extends React.Component {
+export class AsyncComponent extends React.Component {
   constructor (props) {
     super(props)
 
@@ -89,7 +82,7 @@ export class AsyncProps extends React.Component {
       this.props.onLoad()
     }
 
-    load(newProps).then(res => {
+    const complete = () => {
       this.setState({
         loaded: true,
         location: newProps.location.pathname,
@@ -98,7 +91,13 @@ export class AsyncProps extends React.Component {
           this.props.onComplete()
         }
       })
-    }).catch(err => {
+    }
+
+    if (!context.client) {
+      return complete()
+    }
+
+    load(newProps).then(complete).catch(err => {
       if (err) { console.warn(err) }
       this.props.router.goBack()
     })
@@ -122,15 +121,17 @@ export class AsyncProps extends React.Component {
  * @param {object} props RenderProps returned from match()
  */
 export const asyncMiddleware = options => props => {
-  const opts = Object.assign({
-    routes: null,
-    onLoad: () => {},
-    onComplete: () => {},
-  }, options)
+  const opts = {}
+  opts.onLoad = options.onLoad || null
+  opts.onComplete = options.onComplete || null
 
-  cache.routes = opts.routes ? opts.routes : null
+  context.routes = options.routes || null
+  context.client = options.client || null
+  context.store = options.store || null
 
-  delete opts.routes
+  if (!context.client) {
+    console.warn('Apollo client was not passed to apollo-prefetch.')
+  }
 
-  return <AsyncProps {...props} {...opts}/>
+  return <AsyncComponent {...props} {...opts}/>
 }

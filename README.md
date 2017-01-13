@@ -19,7 +19,7 @@ import React from 'react'
 import { Router, browserHistory, match, RouterContext } from 'react-router'
 import routes from './routes'
 import { store, client } from './store'
-import { asyncMiddleware } from './AsyncProps'
+import { asyncMiddleware } from 'apollo-prefetch'
 
 const Root = props => (
   <ApolloProvider client={client} store={store}>
@@ -28,6 +28,8 @@ const Root = props => (
       routes={routes}
       render={asyncMiddleware({
         routes,
+        client,
+        store,
         onLoad: () => console.log('Loading...'),
         onComplete: () => console.log('Load Complete'),
       })}
@@ -39,49 +41,6 @@ match({ browserHistory, routes }, (error, redirectLocation, renderProps) => {
   if (error) throw new Error(error)
   render(<Root renderProps={renderProps}/>, document.getElementById('root'))
 })
-```
-
-Add static `getInitialProps` method to each of your top-level Apollo wrapped components. These components should be direct children of the root component, i.e. when specifying a route, the component to render `<Route path="posts/:slug" component={Post}/>`.
-```javascript
-import React from 'react'
-import { graphql } from 'react-apollo'
-import gql from 'graphql-tag'
-import { client } from 'path/to/apollo/client-instance'
-
-const PageQuery = gql`
-  query getPage($slug: String) {
-    page(slug: $slug) {
-      title
-      content
-      featuredImage
-    }
-  }
-`
-
-class Page extends React.Component {
-  static getInitialProps(props) {
-    return client.query({
-      query: PageQuery,
-      variables: {
-        slug: props.params.slug,
-      },
-    })
-  }
-
-  render() {
-    return this.props.data.loading ? null : (
-      {/* markup */}
-    )
-  }
-}
-
-export default graphql(PageQuery, {
-  options: props => ({
-    variables: {
-      slug: props.params.slug,
-    },
-  }),
-})(Page)
 ```
 
 ## Prefetching Route Data
