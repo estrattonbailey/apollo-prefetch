@@ -1,6 +1,6 @@
 {
   "name": "apollo-prefetch",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Middleware, HOC, & utilities to prefetch view data in React + React-Router + Apollo projects.",
   "main": "dist/index.js",
   "scripts": {
