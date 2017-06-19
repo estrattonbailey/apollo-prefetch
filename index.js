@@ -9,16 +9,16 @@ import { getDataFromTree } from 'react-apollo/lib/index'
  */
 const cache = {
   cached: [],
-  add(loc) {
+  add (loc) {
     this.cached.push(loc)
   },
-  exists(loc) {
+  exists (loc) {
     return this.cached.filter(route => loc === route).length > 0
-  }
+  },
 }
 
 /**
- * Required objects for 
+ * Required objects for
  * react-apollo
  */
 const context = {
@@ -41,15 +41,15 @@ const load = renderProps => {
  * @param {function} cb Async callback, params: error, response
  */
 export const prefetch = (options, cb = () => {}) => {
-  let { location, routes } = 'object' === typeof options ? options : { location: options }
+  let { location, routes } = typeof options === 'object' ? options : { location: options }
 
-  if (cache.exists(location)) { 
+  if (cache.exists(location)) {
     return
   } else {
     cache.add(location)
   }
 
-  routes = routes ? routes : context.routes
+  routes = routes || context.routes
 
   if (!routes) { return console.warn(`No routes were provided to prefetch(${location})`) }
 
