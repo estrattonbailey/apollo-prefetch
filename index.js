@@ -97,17 +97,17 @@ export class AsyncComponent extends React.Component {
       return complete()
     }
 
-    load(newProps).then(complete).catch(err => {
-      if (err) { console.warn(err) }
-      this.props.router.goBack()
-    })
-  }
-
-  shouldComponentUpdate (newProps, newState) {
     this.setState({
       loaded: false,
     })
 
+    load(newProps).then(complete).catch(err => {
+      if (err) { console.warn(err) }
+      complete()
+    })
+  }
+
+  shouldComponentUpdate (newProps, newState) {
     return newState.loaded
   }
 
