@@ -1,3 +1,7 @@
+**Notice:** this library has been used succesfully in production, but it has only been tested with `react-router@3.0.2` and `apollo-client@0.7.3`. It's here for reference, but I won't be putting more work into it and you should probably look elsewhere for solutions.
+
+For a more generic solution that will work with `react-router` v4, try [`react-hydrate`](https://github.com/estrattonbailey/react-hydrate).
+
 # apollo-prefetch
 Async middleware and utilities for prefetching data in React + React-Router + Apollo projects. 
 
