@@ -1,21 +1,6 @@
 import React from 'react'
 import { RouterContext, match } from 'react-router'
-import { getDataFromTree } from 'react-apollo/lib/index'
-
-/**
- * Cache react-router routes config,
- * as well as routes fetched with prefetch()
- * which are stored as strings
- */
-const cache = {
-  cached: [],
-  add (loc) {
-    this.cached.push(loc)
-  },
-  exists (loc) {
-    return this.cached.filter(route => loc === route).length > 0
-  },
-}
+import { getDataFromTree } from 'react-apollo'
 
 /**
  * Required objects for
@@ -33,30 +18,6 @@ const context = {
  */
 const load = renderProps => {
   return getDataFromTree(<RouterContext {...renderProps}/>, context)
-}
-
-/**
- * Fetch data for a given route
- * @param {string|object} location Route to fetch
- * @param {function} cb Async callback, params: error, response
- */
-export const prefetch = (options, cb = () => {}) => {
-  let { location, routes } = typeof options === 'object' ? options : { location: options }
-
-  if (cache.exists(location)) {
-    return
-  } else {
-    cache.add(location)
-  }
-
-  routes = routes || context.routes
-
-  if (!routes) { return console.warn(`No routes were provided to prefetch(${location})`) }
-
-  match({ routes, location }, (err, redirectLocation, renderProps) => {
-    if (err) { console.warn(err) }
-    return load(renderProps).then(res => cb(null, res)).catch(err => cb(err))
-  })
 }
 
 /**

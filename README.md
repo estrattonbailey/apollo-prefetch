@@ -9,7 +9,6 @@ Inspired by [AsyncProps](https://github.com/ryanflorence/async-props) and [next.
 
 ### Goals
 1. When navigating to a new view, prefetch data for next view, *then* render view.
-2. Prefetch data for a given route so Apollo can cache it for faster rendering.
 
 ## Install
 ```bash
@@ -47,33 +46,4 @@ match({ browserHistory, routes }, (error, redirectLocation, renderProps) => {
 })
 ```
 
-## Prefetching Route Data
-In addition to the middleware, this library provides an interface to fetch data for a given route ahead of time.
-```javascript
-import React from 'react'
-import { Link } from 'react-router'
-import { prefetch } from 'apollo-prefetch'
-
-const callback = (err, res) => {
-  if (err) return console.warn(err)
-  console.log(res)
-}
-
-export default props => (
-  <header>
-    <Link 
-      to="/about"
-      onMouseOver={e => prefetch('/about', callback)}>
-      About Page</Link>
-  </header>
-)
-```
-Apollo-prefetch needs to have react-router route structure accessible, so you should probably supply it as an `asyncMiddleware` option, as shown above. Alternatively, you can pass an object as the first param to `prefetch()`.
-```
-import routes from 'path/to/routes'
-
-prefetch({
-  location: '/about',
-  routes,
-}, (err, res) => {})
-```
+MIT
