@@ -10,8 +10,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "microbundle build",
-    "watch": "microbundle watch"
+    "build": "microbundle build --jsx React.createElement",
+    "watch": "microbundle watch --compress false --jsx React.createElement"
   },
   "repository": {
     "type": "git",
