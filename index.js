@@ -1,5 +1,5 @@
 import React from 'react'
-import { RouterContext, match } from 'react-router'
+import { RouterContext } from 'react-router'
 import { getDataFromTree } from 'react-apollo'
 
 /**

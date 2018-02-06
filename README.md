@@ -1,4 +1,4 @@
-**Notice:** this library has been used succesfully in production, but it has only been tested with `react-router@3.0.2` and `apollo-client@0.7.3`. It's here for reference, but I won't be putting more work into it and you should probably look elsewhere for solutions.
+**Notice:** this library has been used succesfully in production, but probably don't use it. It's here for reference, but I won't be putting more work into it.
 
 For a more generic solution that will work with `react-router` v4, try [`react-hydrate`](https://github.com/estrattonbailey/react-hydrate).
 
